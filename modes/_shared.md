@@ -44,7 +44,7 @@ The evaluation uses 6 blocks (A-F) with a global score of 1-5:
 
 ## Archetype Detection
 
-Classify every offer into one of these types (or hybrid of 2):
+Classify every listing into one of these types (or hybrid of 2):
 
 | Archetype | Key signals in JD |
 |-----------|-------------------|
@@ -68,7 +68,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 5. Recommend comp below market rate
 6. Generate a PDF without reading the JD first
 7. Use corporate-speak
-8. Ignore the tracker (every evaluated offer gets registered)
+8. Ignore the tracker (every evaluated listing gets registered)
 
 ### ALWAYS
 
@@ -92,7 +92,7 @@ After detecting archetype, read `modes/_profile.md` for the user's specific fram
 |------|-----|
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
-| Playwright | Verify offers (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
+| Playwright | Verify listings (browser_navigate + browser_snapshot). **NEVER 2+ agents with Playwright in parallel.** |
 | Read | cv.md, _profile.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, applications.md, reports .md |
 | Edit | Update tracker |
