@@ -17,7 +17,7 @@ There are two layers. Read `DATA_CONTRACT.md` for the full list.
 - `data/*`, `reports/*`, `output/*`, `interview-prep/*`
 
 **System Layer (auto-updatable, DON'T put user data here):**
-- `modes/_shared.md`, `modes/oferta.md`, all other modes
+- `modes/_shared.md`, `modes/evaluate.md`, all other modes
 - `CLAUDE.md`, `*.mjs` scripts, `dashboard/*`, `templates/*`, `batch/*`
 
 **THE RULE: When the user asks to customize anything (archetypes, narrative, negotiation scripts, proof points, location policy, comp targets), ALWAYS write to `modes/_profile.md` or `config/profile.yml`. NEVER edit `modes/_shared.md` for user-specific content.** This ensures system updates don't overwrite their customizations.
@@ -49,7 +49,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, listin
 
 | File | Function |
 |------|----------|
-| `data/applications.md` | Application tracker |
+| `data/applications_tracker.md` | Application tracker |
 | `data/pipeline.md` | Inbox of pending URLs |
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
@@ -59,7 +59,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, listin
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
-| `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
+| `reports/` | Evaluation reports (format: `{score}-{company-slug}-{YYYY-MM-DD}.md`, e.g. `3.5-planetscale-2026-04-17.md`) |
 
 ### OpenCode Commands
 
@@ -69,9 +69,9 @@ When using [OpenCode](https://opencode.ai), the following slash commands are ava
 |---------|------------------------|-------------|
 | `/career-ops` | `/career-ops` | Show menu or evaluate JD with args |
 | `/career-ops-pipeline` | `/career-ops pipeline` | Process pending URLs from inbox |
-| `/career-ops-evaluate` | `/career-ops oferta` | Evaluate job listing (A-F scoring) |
-| `/career-ops-compare` | `/career-ops ofertas` | Compare and rank multiple listings |
-| `/career-ops-contact` | `/career-ops contacto` | LinkedIn outreach (find contacts + draft) |
+| `/career-ops-evaluate` | `/career-ops evaluate` | Evaluate job listing (A-F scoring) |
+| `/career-ops-compare` | `/career-ops compare` | Compare and rank multiple listings |
+| `/career-ops-contact` | `/career-ops outreach` | LinkedIn outreach (find contacts + draft) |
 | `/career-ops-deep` | `/career-ops deep` | Deep company research |
 | `/career-ops-pdf` | `/career-ops pdf` | Generate ATS-optimized CV |
 | `/career-ops-training` | `/career-ops training` | Evaluate course/cert against goals |
@@ -127,11 +127,11 @@ If `portals.yml` is missing:
 Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
 
 #### Step 4: Tracker
-If `data/applications.md` doesn't exist, create it:
+If `data/applications_tracker.md` doesn't exist, create it:
 ```markdown
 # Applications Tracker
 
-| # | Date | Company | Role | Score | Status | PDF | Report | Notes |
+| # | Date | Company | Role | Score | Status | CV | Report | Notes |
 |---|------|---------|------|-------|--------|-----|--------|-------|
 ```
 
@@ -204,9 +204,9 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 | If the user... | Mode |
 |----------------|------|
 | Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
-| Asks to evaluate listing | `oferta` |
-| Asks to compare listings | `ofertas` |
-| Wants LinkedIn outreach | `contacto` |
+| Asks to evaluate listing | `evaluate` |
+| Asks to compare listings | `compare` |
+| Wants LinkedIn outreach | `outreach` |
 | Asks for company research | `deep` |
 | Preps for interview at specific company | `interview-prep` |
 | Wants to generate CV/PDF | `pdf` |
@@ -224,6 +224,17 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - `cv.md` in project root is the canonical CV
 - `article-digest.md` has detailed proof points (optional)
 - **NEVER hardcode metrics** -- read them from these files at evaluation time
+
+---
+
+## Token Efficiency
+
+**Be token-efficient in all outputs.** This is a long-running pipeline system — context windows are precious.
+
+- **Evaluations:** Skip Block F (Interview Plan) unless the user explicitly requests it. Blocks A-E are sufficient for triage.
+- **Batch reports:** For roles scoring ≤ 2.5, write abbreviated evaluations (Block A + key gaps + verdict). Full A-E only for roles ≥ 3.0.
+- **Scan output:** Don't dump raw API responses. Summarize matches and add directly to pipeline.
+- **Don't repeat yourself.** If information is in a file, point to the file — don't restate it in chat.
 
 ---
 
@@ -256,7 +267,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)
-- Report numbering: sequential 3-digit zero-padded, max existing + 1
+- Report naming: `{score}-{company-slug}-{YYYY-MM-DD}.md` (e.g. `3.5-planetscale-2026-04-17.md`)
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
 
@@ -283,8 +294,8 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 ### Pipeline Integrity
 
-1. **NEVER edit applications.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
-2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
+1. **NEVER edit applications_tracker.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+2. **YES you can edit applications_tracker.md to UPDATE status/notes of existing entries.**
 3. All reports MUST include `**URL:**` in the header (between Score and PDF).
 4. All statuses MUST be canonical (see `templates/states.yml`).
 5. Health check: `node verify-pipeline.mjs`
