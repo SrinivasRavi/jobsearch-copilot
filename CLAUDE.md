@@ -60,6 +60,9 @@ AI-powered job search automation built on Claude Code: pipeline tracking, listin
 | `interview-prep/{company}-{role}.md` | Company-specific interview intel reports |
 | `analyze-patterns.mjs` | Pattern analysis script (JSON output) |
 | `reports/` | Evaluation reports (format: `{score}-{company-slug}-{YYYY-MM-DD}.md`, e.g. `3.5-planetscale-2026-04-17.md`) |
+| `srini/northstar.md` | **Strategic brain** — scan workflow, evaluation workflow, scoring framework, phase definitions. READ THIS at session start. |
+| `srini/execution_tracking.md` | Session log — what was done, what's pending, cross-session continuity |
+| `srini/current_plan.md` | Current phase checklist and status |
 
 ### OpenCode Commands
 
